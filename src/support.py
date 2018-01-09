@@ -728,15 +728,100 @@ def calc_score(gtsAnn, resAnn):
     return np.corrcoef(salMap.reshape(-1), fixationMap.reshape(-1))[0][1]
 
 
+def get_raw_data(subject_dic, source_path, video_name):
+    one_video_lon = []
+    one_video_lat = []
+    one_video_eye_x = []
+    one_video_eye_y = []
+    one_video_eye_lon = []
+    one_video_eye_lat = []
+
+    for i in range(len(subject_dic)):
+
+        file = source_path + '//' + str(subject_dic[i]) + '//' + str(video_name) + '.txt'
+        f = open(file)
+        lines = f.readlines()
+        raw_data = []  # notice to reset it
+
+        for line in lines:
+            line = line.split()
+            raw_data.append(line)
+        raw_data = np.array(raw_data)
+
+        head_lon = raw_data[:, 2]
+        head_lat = raw_data[:, 1]
+        eye_x = raw_data[:, 4]
+        eye_y = raw_data[:, 5]
+        eye_lon = raw_data[:, 6]
+        eye_lat = raw_data[:, 7]
+        # save one video's data
+        one_video_lon.append(head_lon)
+        one_video_lat.append(head_lat)
+        one_video_eye_x.append(np.round(eye_x.astype('float32')))  # scale the data
+        one_video_eye_y.append(np.round(eye_y.astype('float32')))
+        one_video_eye_lon.append(eye_lon.astype('float32') * 180 / np.pi)  # scale the data
+        one_video_eye_lat.append(eye_lat.astype('float32') * 180 / np.pi)
+
+    return one_video_lon, one_video_lat, one_video_eye_x, one_video_eye_y, one_video_eye_lon, one_video_eye_lat
 
 
 
+def fov_detection(lon, lat, R_limit_set, length_val_set):
+    '''detect one subject's fov'''
+    # detection config
+    # length_val = length_val_set  # 45 as the framerate is about 30 fps, one fov need at least 2s, the number of fixation in one fov
+    # R_limit_= R_limit_set  # 3 degree
 
+    fov_zone = []
+    length_raw = length_val_set # the fixation number of a fov
+    start_new = 0
+    flag = 'not detect' # flag is the fixation is in fov
 
+    lon = np.float32(lon)
+    lat = np.float32(lat)
 
+    while (start_new + length_raw - 1) < (len(lon)):
+        start_point = start_new
+        length_val = length_raw
+        zone_delat_val = [] # save the delta value, remember to reset it
 
+        center_lon = np.mean(lon[start_point : (start_point + length_val)])
+        center_lat = np.mean(lat[start_point : (start_point + length_val)])
+        for i in range(start_point, (start_point + length_val)):
+            'maybe not reasonable'
+            if abs(lon[i] - center_lon) <= R_limit_set and abs(lat[i] - center_lat) <= R_limit_set:
+                flag = 'include in fov'
+            else:
+                'if not in the fov'
+                flag = 'out of fov'
+                start_new = i + 1
+                break
 
+        if (flag == 'include in fov'): # not Redundant
+            while(flag == 'include in fov'):
+                if (start_point + length_val - 1) <= (len(lon) - 2): # -2 becasue the length_val will +1
+                    length_val += 1
+                    center_lon = np.mean(lon[start_point: (start_point + length_val)])
+                    center_lat = np.mean(lat[start_point: (start_point + length_val)])
+                    for i in range(start_point, (start_point + length_val)):
+                        if abs(lon[i] - center_lon) <= R_limit_set and abs(lat[i] - center_lat) <= R_limit_set:
+                            flag = 'include in fov'
+                        else:
+                            'if not in the fov'
+                            flag = 'out of fov'
+                            break
+                else:
+                    break
 
+            fov_zone.append([start_point, (start_point + length_val - 1)])
+            start_new = start_new + length_val
 
+    return fov_zone
 
-
+def fov_center(fov_zone, lon, lat):
+    lon = np.float32(lon)
+    lat = np.float32(lat)
+    fov_center = []
+    for i in range(len(fov_zone)):
+        fov_center.append([np.mean(lon[fov_zone[i][0]:(fov_zone[i][1])]), np.mean(lat[fov_zone[i][0]:(fov_zone[i][1])])])
+    return fov_center

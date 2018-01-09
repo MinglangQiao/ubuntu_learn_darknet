@@ -7,7 +7,7 @@ https://pjreddie.com/darknet/yolo/
 # get frame
 ./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output /media/ml/Data1/2_0925_全景视频的眼动研究/VR_杨燕丹/Video_All/VRBasketball.mp4 -thresh 0.6
 
-# get video
+# merge the frames to get video
 ffmpeg -framerate 25 -i output_%08d.jpg output.mp4
 
 #remove the frame
@@ -18,6 +18,15 @@ rm output_*.jpg
 ./darknet detect cfg/yolo.cfg yolo.weights data/dog.jpg -thresh 0.25
 
 //./darknet detector demo  cfg/yolo.cfg yolo.weights data/dog.jpg -thresh 0.25
+
+
+2.1 get_multi_frame
+
+./darknet detect cfg/yolo.cfg yolo.weights
+
+enter the image path: 
+data/horses.jpg
+
 
 3:打开摄像头
 在ubuntu软件里搜索cheese
