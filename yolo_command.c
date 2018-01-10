@@ -4,7 +4,7 @@ https://pjreddie.com/darknet/yolo/
 
 1: get the video frame(80 class), 0.7 need to chang to another
 
-# get frame
+# get frames of video
 
 ./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output /media/ml/Data1/2_0925_全景视频的眼动研究/VR_杨燕丹/Video_All/VRBasketball.mp4 -thresh 0.6
 
@@ -25,7 +25,7 @@ rm output_*.jpg
 
 ./darknet detect cfg/yolo.cfg yolo.weights
 
-enter the image path: 
+enter the image path:
 data/horses.jpg
 
 
@@ -48,14 +48,15 @@ gcc get_box.c -o get_box
 grep -nrH 'save_image'
 
 
-
-
 7:get frames from video
 
-ffmpeg -i /home/ml/Data/Video_All/A380.mp4 /home/ml/图片/ffmpeg_test/%03d.png 
+ffmpeg -i /home/ml/Data/Video_All/A380.mp4 /home/ml/图片/ffmpeg_test/%03d.png
 
 
+8:更改python的默认版本
 
+update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1 # 1为低优先级
 
+update-alternatives --install /usr/bin/python python /usr/bin/python3.4 2
 
-
+ python --version

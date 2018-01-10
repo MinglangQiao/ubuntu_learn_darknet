@@ -56,7 +56,7 @@ def get_one_video_predictions():
 
                     get_frame_txt_rename(read_image_path, i_frame, detec_threshold[i_video])
 
-                    print('>>>>>> processing: video_%d, %s, frame_%03d'%(i_video, video_dic[i_video], i_frame))
+                    print('>>>>>> processing: video_%d, %s, frame_%03d/%03d'%(i_video, video_dic[i_video], i_frame, FRAMESCOUNT))
 
 
 def get_frame_txt_rename_faster(raw_video_path, video_name, frame, threshold):
@@ -68,29 +68,29 @@ def get_frame_txt_rename_faster(raw_video_path, video_name, frame, threshold):
     find_flag = True
 
     ## rename txt and image
+    'copy to target dict'
+    save_path = '/home/ml/Data/get_box/' + video_name + '/'
+    if os.path.exists(save_path) is False:
+        os.mkdir(save_path)
+
     while(find_flag):
         if os.path.exists(txt_path) is True:
             'read txt'
             os.rename("detection_box.txt",new_name_txt)
             find_flag = False
 
-            'copy to target dict'
-            save_path = '/home/ml/Data/get_box/' + video_name + '/'
-            if os.path.exists(save_path) is False:
-                os.mkdir(save_path)
-
-            print(save_path)
+            # print(save_path)
             # subprocess.call(["mv test_*.txt " + save_path], shell=True)
             # subprocess.call(["mv output_*.png " + save_path], shell=True)
             subprocess.call(["mv test_*.txt " + save_path], shell=True)
-            subprocess.call(["mv predictions.jpg" + save_path], shell=True)
+            subprocess.call(["mv output_*.jpg " + save_path], shell=True)
 
     return find_flag
 
 
 def command_detect_video(raw_video_path, threshold):
     os.chdir("/home/ml/darknet/")
-    subprocess.call(["./darknet", "detector", "demo", "cfg/coco.data", "cfg/yolo.cfg", "yolo.weights",  "-prefix", "output ",  raw_video_path, " -thresh ", str(threshold)])
+    subprocess.call(["./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output " + raw_video_path + " -thresh " + str(threshold)], shell = True)
 
 def command_detect_multi_image():
     os.chdir("/home/ml/darknet/")
@@ -153,18 +153,23 @@ def run():
 
     if mode == 'get_prediction_box':
             import cv2
+            import subprocess
 
-            sub_mode = 'get_box_multi_frames' # 'get_box', 'get_sta', 'get_box_multi_frames'
+            sub_mode = 'get_box' # 'get_box', 'get_sta', 'get_box_multi_frames'
 
             if sub_mode == 'get_box':
 
                 for i_video in range(len(video_dic)):
-                    if i_video == 70:
+                    if i_video == 0:
 
                         video_path = '/home/ml/Data/Video_All/'
                         read_video_path = video_path + video_dic[i_video] + '.mp4'
 
+                        # subprocess.call(["./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output /media/ml/Data1/2_0925_全景视频的眼动研究/VR_杨燕丹/Video_All/VRBasketball.mp4 -thresh 0.6"], shell = True)
+
                         p_rename = Process(target = get_one_video_predictions_faster, args = (i_video, ))
+                        # print('>>>>>>>>>>>.d1: ', read_video_path, detect_threshold[i_video])
+
                         p_video_detection = Process(target = command_detect_video, args = (read_video_path, detect_threshold[i_video]))
 
                         p_rename.start()
