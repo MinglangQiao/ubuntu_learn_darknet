@@ -5,6 +5,7 @@ https://pjreddie.com/darknet/yolo/
 1: get the video frame(80 class), 0.7 need to chang to another
 
 # get frame
+
 ./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output /media/ml/Data1/2_0925_全景视频的眼动研究/VR_杨燕丹/Video_All/VRBasketball.mp4 -thresh 0.6
 
 # merge the frames to get video
@@ -45,3 +46,16 @@ gcc get_box.c -o get_box
 # 6: 查找函数调用
 # 我在前没有在整个人darknet里面查找， 只是在src里面找也是不对的
 grep -nrH 'save_image'
+
+
+
+
+7:get frames from video
+
+ffmpeg -i /home/ml/Data/Video_All/A380.mp4 /home/ml/图片/ffmpeg_test/%03d.png 
+
+
+
+
+
+

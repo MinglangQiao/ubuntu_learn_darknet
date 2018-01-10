@@ -75,20 +75,37 @@ def get_frame_txt_rename_faster(raw_video_path, video_name, frame, threshold):
             find_flag = False
 
             'copy to target dict'
-            save_path = 'results/' + video_name + '/'
+            save_path = '/home/ml/Data/get_box/' + video_name + '/'
             if os.path.exists(save_path) is False:
                 os.mkdir(save_path)
 
             print(save_path)
+            # subprocess.call(["mv test_*.txt " + save_path], shell=True)
+            # subprocess.call(["mv output_*.png " + save_path], shell=True)
             subprocess.call(["mv test_*.txt " + save_path], shell=True)
-            subprocess.call(["mv output_*.png " + save_path], shell=True)
+            subprocess.call(["mv predictions.jpg" + save_path], shell=True)
 
     return find_flag
 
 
 def command_detect_video(raw_video_path, threshold):
     os.chdir("/home/ml/darknet/")
-    subprocess.call(["./darknet detector demo cfg/coco.data cfg/yolo.cfg yolo.weights  -prefix output  " +  raw_video_path + " -thresh " + str(threshold)], shell=True)
+    subprocess.call(["./darknet", "detector", "demo", "cfg/coco.data", "cfg/yolo.cfg", "yolo.weights",  "-prefix", "output ",  raw_video_path, " -thresh ", str(threshold)])
+
+def command_detect_multi_image():
+    os.chdir("/home/ml/darknet/")
+    subprocess.call(["./darknet detect cfg/yolo.cfg yolo.weights"], shell = True)
+
+def get_terminal_out():
+    os.chdir("/home/ml/darknet/")
+    pipe = subprocess.Popen("m", shell=True, stdout=PIPE).stdout
+    output = pipe.read()
+
+    print('>>>>>>>>>>>>>>get the output', output)
+
+def command_print_iamge_path(im_path):
+    os.chdir("/home/ml/darknet/")
+    subprocess.call([im_path], shell = True)
 
 
 def get_one_video_predictions_faster(i_video):
@@ -135,15 +152,16 @@ def run():
     mode  = mode_dic[ 1 ]
 
     if mode == 'get_prediction_box':
+            import cv2
 
-            sub_mode = 'get_box' # 'get_box', 'get_sta'
+            sub_mode = 'get_box_multi_frames' # 'get_box', 'get_sta', 'get_box_multi_frames'
 
             if sub_mode == 'get_box':
 
                 for i_video in range(len(video_dic)):
                     if i_video == 70:
 
-                        video_path = '/home/ml/learn_darknet/Data/Video_All/'
+                        video_path = '/home/ml/Data/Video_All/'
                         read_video_path = video_path + video_dic[i_video] + '.mp4'
 
                         p_rename = Process(target = get_one_video_predictions_faster, args = (i_video, ))
@@ -156,6 +174,57 @@ def run():
                         p_rename.join()
 
                         p_rename.terminate()
+
+            if sub_mode == 'get_box_multi_frames':
+                """
+                not finish yet
+                """
+                os.chdir("/home/ml/darknet/")
+
+                for i_video in range(len(video_dic)):
+                    if i_video == 70:
+
+                        from config import video_path
+                        from read_yuv import read_YUV420, merge_YUV2RGB_v1
+                        import subprocess
+
+                        'config'
+                        FRAMERATE, FRAMESCOUNT, IMAGEWIDTH, IMAGEHEIGHT = get_video_config(video_path, video_dic[i_video])
+
+                        video_path = '/home/ml/Data/Video_All/'
+                        read_video_path = video_path + video_dic[i_video] + '.mp4'
+
+                        'start detect:'
+                        p_rename = Process(target = get_one_video_predictions_faster, args = (i_video, ))
+                        p_rename.start()
+
+                        # p_multi_frame = Process(target = command_detect_multi_image, args = ())
+
+                        p = subprocess.Popen(["./darknet", "detect", "cfg/yolo.cfg", "yolo.weights",
+                        ], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+                        for i_frame in range(1,FRAMESCOUNT + 1):
+                            if i_frame == 1:
+
+                                image_path = '/media/ml/Data1/2_0925_全景视频的眼动研究/Salience_of_FOV/程序/Finding_Content/A380_raw_frames/'
+                                read_video_path = image_path + '%03d'%i_frame + '.png'
+                                print('>>>>>>>>>>>>>>>>>>>. get here')
+
+                                # p_multi_frame.start()
+
+                                output, err = p.communicate(b'set data/dog.jpg\n')
+                                print('>>>>>>>>>>>>output: ', output.decode('utf-8'))
+
+                                # get_terminal_out = Process(target = get_terminal_out, args = ())
+
+                                # get_terminal_out.start()
+
+                                # p_video_detection.start()
+
+                                # p_video_detection.join()
+                                # p_rename.join()
+
+                                # p_rename.terminate()
 
             if sub_mode ==  'get_sta':
                 """
@@ -184,15 +253,6 @@ def run():
                                     temp_file.append(line)
 
                                 print(temp_file)
-
-
-
-
-    if mode == 'get_prediction_multi_frame':
-        for i_video in range(len(video_dic)):
-            if i_video == 70:
-                pass
-
 
 
     if mode == 'get_yuv':
